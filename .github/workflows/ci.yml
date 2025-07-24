@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to Artifact Registry
+name: Build, Push and Deploy to GKE
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,3 +29,14 @@ jobs:
         context: .
         push: true
         tags: europe-central2-docker.pkg.dev/wide-net-466915-c6/docker-test-repository/consumer:latest
+
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: docker-test-cluster
+        location: us-central1       
+
+    - name: Deploy to GKE
+      run: |
+        kubectl set image deployment/consumer-deployment \
+          producer-container=europe-central2-docker.pkg.dev/wide-net-466915-c6/docker-test-repository/producer:latest
